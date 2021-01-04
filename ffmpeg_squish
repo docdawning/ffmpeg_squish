@@ -1,0 +1,90 @@
+#!/bin/bash
+# This is just a wrapper to ffmpeg. I use this to transcode video clips to be as small as functionally possible
+# for use with my kid's tablet.
+#
+# If you need to discuss this, reach me at:
+# contact@jts.me
+#
+
+function print_usage {
+	echo -e "\nUsage: ffmpeg_squish <input file> <output file>"
+	echo "Example: ffmpeg_squish rickroll.mkv rickroll.mp4"
+}
+
+function verify_arguments {
+	# Check for correct number of args
+        if [ "$1" -ne 2 ] ; then
+		echo "Incorrect number of arguments supplied"
+		print_usage
+		exit -1
+	fi
+
+	# Check that input file exists
+	if [ ! -f "$2" ] ; then
+		echo "Given input file \"$2\" does not exist. This is the input file and therefore must exist"
+		print_usage
+		exit -1
+	fi
+
+	# Check that input file name does not equal output filename
+	if [ "$2" = "$3" ] ; then
+		echo "Error: Input and Output file names must differ"
+		print_usage
+		exit -1
+	fi
+
+	# Check that ffmpeg is in PATH env var
+	PATH_TO_FFMPEG=`which ffmpeg`
+	if [ -z "$PATH_TO_FFMPEG" ] ; then
+		echo "Error: ffmpeg is not in your PATH. This script depends on ffmpeg"
+		exit -1
+	fi
+}
+
+function run_ffmpeg {
+	INPUT_FILE=$1
+	OUTPUT_FILE=$2
+	CONVERT_TO_MONO_AUDIO="-ac 1"
+	SCALE_VIDEO="-filter:v scale=480:-1"
+	OVERWRITE_OUTPUT_FILE_IF_EXISTS="-y"
+	CMD="ffmpeg -i $1 $CONVERT_TO_MONO_AUDIO $SCALE_VIDEO $OVERWRITE_OUTPUT_FILE_IF_EXISTS $2"
+	echo "Executing $CMD"
+	#eval $CMD
+}
+
+
+function send_optional_notification {
+	# This function will send a Slack notification if there exists a FFMPEG_SQUISH_WEBHOOK environment variable set
+	if [ -z "$FFMPEG_SQUISH_WEBHOOK" ] ; then
+		echo "'FFMPEG_SQUISH_WEBHOOK' environment variable is not set, skipping sending Slack notification that this script has completed."
+		return
+	fi
+	curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"ffmpeg_squish has completed producing $1\"}" $FFMPEG_SQUISH_WEBHOOK
+	if [ "$?" -ne 0 ] ; then
+		echo "Warning: Failed to send Slack notification"
+	fi
+}
+
+function main {
+	# In every event, I'd like a new line before we display anything
+	echo -e "\n"
+
+	# Make the args human-readable
+	NUMBER_OF_ARGS="$1"
+	INPUT_FILE="$2"
+	OUTPUT_FILE="$3"
+
+	# Verify args and general setup
+	verify_arguments "$NUMBER_OF_ARGS" "$INPUT_FILE" "$OUTPUT_FILE"
+
+	# Invoke ffmpeg
+	run_ffmpeg $INPUT_FILE $OUTPUT_FILE
+
+	# Send optional notification
+	send_optional_notification $OUTPUT_FILE
+}
+
+
+## Trigger this script
+main "$#" "$1" "$2"
+
