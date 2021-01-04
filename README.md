@@ -5,7 +5,7 @@ This is a wrapper script to keep track of my ffmpeg settings I use to transcode 
 To add ffmpeg_squish to your path, edit your ~/.bash_profile to update the PATH to include the path to where your copy of ffmpeg_squish is located, for example:
 <pre>
 ...
-PATH="/Library/Frameworks/Python.framework/Versions/3.8/bin:${PATH}:/Users/my_username/opt/ffmpeg_squish/ffmpeg_squish"
+PATH="/Library/Frameworks/Python.framework/Versions/3.8/bin:${PATH}:/Users/my_username/opt/ffmpeg_squish/bash"
 ...
 </pre>
 
