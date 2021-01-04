@@ -91,9 +91,10 @@ function main {
 
 	# Send optional notification
 	send_optional_notification "$OUTPUT_FILE"
+
+	echo -e "\n"
 }
 
 
 ## Trigger this script
 main "$#" "$1" "$2"
-echo -e "\n"
